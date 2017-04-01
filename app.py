@@ -1,5 +1,6 @@
 
 import os
+import datetime
 import flask
 from flask import Flask
 from flask_pymongo import PyMongo
@@ -44,19 +45,31 @@ def board():
 
 @app.route("/upload", methods=["POST"])
 def upload():
+    # verify user
+    email = flask.request.json["email"]
+    username = flask.request.json["username"]
+    # mongo.db.users.update_one({
+    #     "email": email,
+    #     "username": username
+    # })
+
     file = flask.request.files["file"]
     print(file.filename)
     file_binary_str = file.read()
+
     # save to mongodb
-    mongo.db.images.insert_one({
+    saved = mongo.db.images.insert_one({
         "filename": file.filename,
         "content": file_binary_str
     })
+    saved.inserted_id
 
     # query ms api
     fit = best_fit_emotion(file_binary_str)
     print(fit)
-    return "Upload Sucess"
+    if fit is None:
+        return {"error": "MS API error"}
+    return fit
 
 
 if __name__ == '__main__':
