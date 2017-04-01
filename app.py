@@ -4,6 +4,7 @@ import flask
 from flask import Flask
 from flask_pymongo import PyMongo
 
+from emotion import best_fit_emotion
 
 app = Flask(__name__)
 # mongodb
@@ -44,8 +45,18 @@ def board():
 @app.route("/upload", methods=["POST"])
 def upload():
     file = flask.request.files["file"]
-    print(file)
-    return "Sucess"
+    print(file.filename)
+    file_binary_str = file.read()
+    # save to mongodb
+    mongo.db.images.insert_one({
+        "filename": file.filename,
+        "content": file_binary_str
+    })
+
+    # query ms api
+    fit = best_fit_emotion(file_binary_str)
+    print(fit)
+    return "Upload Sucess"
 
 
 if __name__ == '__main__':

@@ -24,24 +24,34 @@ An example response from MS API:
              'surprise': 0.03856135}}]
 """
 
+TEST_IMG = "http://static2.businessinsider.com/image/5087f99369bedd394700000d/obama-press-conference-obamacare-sad.jpg"
 
-def ms_emotion_api():
-    headers = {
-        "Ocp-Apim-Subscription-Key": MS_API_KEY
-    }
-    data = {
-        "url": "http://static2.businessinsider.com/image/5087f99369bedd394700000d/obama-press-conference-obamacare-sad.jpg"
-    }
-    req = requests.post(MS_API_URL, headers=headers, json=data)
+
+def ms_emotion_api(file_binary_str=None):
+    """Upload single file as octet-stream in request body.
+    file: binary stream
+    """
+    headers = {"Ocp-Apim-Subscription-Key": MS_API_KEY}
+    if file_binary_str is None:
+        data = {"url": TEST_IMG}
+        req = requests.post(MS_API_URL, headers=headers, json=data)
+    else:
+        headers["Content-Type"] = "application/octet-stream"
+        req = requests.post(MS_API_URL, headers=headers, data=file_binary_str)
     if req.status_code != requests.codes.ok:
+        pprint(req.request.headers)
+        print(req.status_code)
         pprint(req.headers)
         pprint(req.json())
         return
     return req.json()
 
 
-def best_fit():
-    res = ms_emotion_api()
+def best_fit_emotion(file_binary_str=None):
+    """
+    `file` passed directly to ms_emotion_apai
+    """
+    res = ms_emotion_api(file_binary_str)
     if not res:
         return None
     # use the first person in the image: res[0]
