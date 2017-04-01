@@ -6,8 +6,8 @@ from flask_pymongo import PyMongo
 
 
 app = Flask(__name__)
-app.config["MONGO_DBNAME"] = "hymnia"
 # mongodb
+app.config["MONGO_DBNAME"] = "hymnia"
 mongo = PyMongo(app)
 
 
@@ -39,6 +39,13 @@ def board():
     # for user in mongo.db.users.find():
     #     print(user)
     return "Here are all the people"
+
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    file = flask.request.files["file"]
+    print(file)
+    return "Sucess"
 
 
 if __name__ == '__main__':
