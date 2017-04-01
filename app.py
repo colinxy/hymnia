@@ -27,16 +27,26 @@ class User(flask_login.UserMixin):
 
 @login_manager.user_loader
 def user_loader(email):
-    # get user from db
-    user_json = mongo.db.users.find({"email": email})
-    print(user_json)
+    # get user from db, based on email (user.id)
+    user_ = mongo.db.users.find_one({"email": email})
+    print(user_)
+    if user_ is None:
+        return
     user = User()
+    user.id = email
     return user
 
 
 @login_manager.request_loader
 def request_loader(request):
-    pass
+    email = request.json["email"]
+    user_ = mongo.db.users.find_one({"email": email})
+    if user_ is None:
+        return
+    print(user_)
+    user = User()
+    user.id = email
+    return user
 
 
 @app.route("/")
@@ -65,8 +75,8 @@ def logout():
 
 
 @app.route("/board")
-# @login_required                 # no login needed
-def status():
+@login_required                 # no login needed
+def board():
     return "Good to be logged in"
 
 
