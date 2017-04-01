@@ -6,7 +6,7 @@ from flask_pymongo import PyMongo
 
 
 app = Flask(__name__)
-
+app.config["MONGO_DBNAME"] = "hymnia"
 # mongodb
 mongo = PyMongo(app)
 
@@ -33,8 +33,11 @@ def logout():
 @app.route("/board")
 def board():
     email = flask.request.json["email"]
+    # print(email)
     user = mongo.db.users.find_one({"email": email})
     print(user)
+    # for user in mongo.db.users.find():
+    #     print(user)
     return "Here are all the people"
 
 
