@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -7,6 +7,7 @@ if [ ! -z "$1" ]; then
     workers="$1"
 fi
 
-source envs
+# script has to run in current directory
+. envs
 
 gunicorn --bind 0.0.0.0:80 wsgi:app -w "$workers"
