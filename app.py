@@ -5,7 +5,7 @@ import flask
 from flask import Flask
 from flask_pymongo import PyMongo
 
-from emotion import best_fit_emotion
+from emotion import ms_emotion_api
 
 app = Flask(__name__)
 # mongodb
@@ -20,7 +20,9 @@ def index():
 
 @app.route("/login", methods=["POST"])
 def login():
-    """POST JSON to /login, make sure `email` key is present"""
+    """*ignore, not implemented*
+    POST JSON to /login, make sure `email` key is present
+    """
     req_json = flask.request.json
     print(req_json)
 
@@ -32,44 +34,66 @@ def logout():
     return "Logged out"
 
 
-@app.route("/board")
-def board():
-    email = flask.request.json["email"]
+@app.route("/users")
+def all_users():
+    # email = flask.request.args["email"]
     # print(email)
-    user = mongo.db.users.find_one({"email": email})
-    print(user)
-    # for user in mongo.db.users.find():
-    #     print(user)
-    return "Here are all the people"
+    mongo.db.users.find()
+    return
+
+
+@app.route("/music")
+def all_music():
+    return
+
+
+@app.route("/report")
+def report_music():
+    email = flask.request.args["email"]
+    username = flask.request.args["username"]
 
 
 @app.route("/upload", methods=["POST"])
 def upload():
+    """
+    `email` and `username` are required as params.
+    must send multiparted form with file field set to "file"
+    """
     # verify user
-    email = flask.request.json["email"]
-    username = flask.request.json["username"]
-    # mongo.db.users.update_one({
-    #     "email": email,
-    #     "username": username
-    # })
+    email = flask.request.args["email"]
+    username = flask.request.args["username"]
 
     file = flask.request.files["file"]
     print(file.filename)
-    file_binary_str = file.read()
+    file_bytestr = file.read()
+
+    # query ms api
+    emotion = ms_emotion_api(file_bytestr)
+    print(emotion)
+    if emotion is None:
+        return flask.jsonify(error="MS API error, possibly no human face")
 
     # save to mongodb
     saved = mongo.db.images.insert_one({
         "filename": file.filename,
-        "content": file_binary_str
+        "content": file_bytestr,
+        "emotion": emotion,
+        "date": datetime.datetime.utcnow(),
+        "user_email": email,
     })
-    saved.inserted_id
+    # print(saved.inserted_id)
+    # create user if needed
+    mongo.db.users.update_one(filter={
+        "email": email,
+    }, update={
+        "$set": {"username": username},
+        # image_ids: list of foreign ids to images
+        "$push": {"image_ids": saved.inserted_id},
+    }, upsert=True)
 
-    # query ms api
-    fit = best_fit_emotion(file_binary_str)
-    print(fit)
-    if fit is None:
-        return {"error": "MS API error"}
-    return fit
+    # client resend image_id when reporting music
+    emotion["image_id"] = str(saved.inserted_id)
+    return flask.jsonify(emotion)
 
 
 if __name__ == '__main__':

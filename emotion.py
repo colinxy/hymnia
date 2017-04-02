@@ -27,33 +27,31 @@ An example response from MS API:
 TEST_IMG = "http://static2.businessinsider.com/image/5087f99369bedd394700000d/obama-press-conference-obamacare-sad.jpg"
 
 
-def ms_emotion_api(file_binary_str=None):
+def ms_emotion_api(file_bytestr=None):
     """Upload single file as octet-stream in request body.
     file: binary stream
     """
     headers = {"Ocp-Apim-Subscription-Key": MS_API_KEY}
-    if file_binary_str is None:
+    if file_bytestr is None:
         data = {"url": TEST_IMG}
         req = requests.post(MS_API_URL, headers=headers, json=data)
     else:
         headers["Content-Type"] = "application/octet-stream"
-        req = requests.post(MS_API_URL, headers=headers, data=file_binary_str)
+        req = requests.post(MS_API_URL, headers=headers, data=file_bytestr)
     if req.status_code != requests.codes.ok:
         pprint(req.request.headers)
         print(req.status_code)
         pprint(req.headers)
         pprint(req.json())
-        return
-    return req.json()
-
-
-def best_fit_emotion(file_binary_str=None):
-    """
-    `file` passed directly to ms_emotion_apai
-    """
-    res = ms_emotion_api(file_binary_str)
-    if not res:
         return None
+    res = req.json()
+    if not res:
+        print(res)
+        return None
+
+    print(">>> MS EMOTION API RESULT")
+    pprint(res)
+    print("<<< END OF MS EMOTION API RESULT")
     # use the first person in the image: res[0]
     scores = sorted(res[0]["scores"].items(), key=lambda d: d[1], reverse=True)
     # use the emotion with highest score: scores[0]
