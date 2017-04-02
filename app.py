@@ -21,8 +21,6 @@ app = Flask(__name__)
 app.config["MONGO_DBNAME"] = "hymnia"
 mongo = PyMongo(app)
 
-PAGE_SIZE = 10
-
 
 @app.route("/")
 def index():
@@ -84,7 +82,7 @@ def all_images():
     return flask.jsonify(images)
 
 
-@app.route("/image/<img>")
+@app.route("/image/<img_id>")
 def get_image(img_id):
     image = mongo.db.images.find_one_or_404({"_id": ObjectId(img_id)})
     print(image["filename"])
@@ -153,6 +151,9 @@ def upload():
 # https://stackoverflow.com/questions/39272072/flask-send-stream-as-response
 @app.route("/stream")
 def stream():
+    """
+    url parameter `youtube`: 11 character video id or the URL of the video
+    """
     youtube_url = flask.request.args["youtube"]
     video = pafy.new(youtube_url)
     best_audio = video.getbestaudio()
