@@ -1,9 +1,14 @@
 
+import io
 import os
 import datetime
+from pprint import pprint
 import flask
 from flask import Flask
+import pymongo
+from bson.objectid import ObjectId
 from flask_pymongo import PyMongo
+# from bson import json_util
 
 from emotion import ms_emotion_api
 
@@ -11,6 +16,8 @@ app = Flask(__name__)
 # mongodb
 app.config["MONGO_DBNAME"] = "hymnia"
 mongo = PyMongo(app)
+
+PAGE_SIZE = 10
 
 
 @app.route("/")
@@ -36,15 +43,49 @@ def logout():
 
 @app.route("/users")
 def all_users():
-    # email = flask.request.args["email"]
-    # print(email)
-    mongo.db.users.find()
-    return
+    """omit users that haven't uploaded any (image, music)"""
+    # TODO: implement pagination
+    # skip = flask.request.args["skip"]
+    user_cursor = mongo.db.users.find({}, {"_id": False})
+    users = []
+    for user in user_cursor:
+        pprint(user)
+        if "image_ids" in user and "music_ids" in user:
+            users.append({
+                "username": user["username"],
+                "images": [str(im_id) for im_id in user["image_ids"]]
+            })
+    return flask.jsonify(users)
 
 
 @app.route("/music")
 def all_music():
     return
+
+
+@app.route("/images")
+def all_images():
+    image_cursor = mongo.db.images\
+        .find({}, {"content": False})\
+        .sort("date", pymongo.DESCENDING)
+    images = []
+    for image in image_cursor:
+        pprint(image)
+        if True:
+            images.append({
+                "image_id": str(image["_id"]),
+                "filename": image["filename"],
+                "username": image["user_username"]
+            })
+    return flask.jsonify(images)
+
+
+@app.route("/image/<img>")
+def get_image(img):
+    image = mongo.db.images.find_one_or_404({"_id": ObjectId(img)})
+    print(image["filename"])
+    # only handle JPEG for now
+    return flask.send_file(io.BytesIO(image["content"]), mimetype="image/jpeg")
 
 
 @app.route("/report")
@@ -79,6 +120,7 @@ def upload():
         "content": file_bytestr,
         "emotion": emotion,
         "date": datetime.datetime.utcnow(),
+        "user_username": username,
         "user_email": email,
     })
     # print(saved.inserted_id)
