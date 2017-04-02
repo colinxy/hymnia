@@ -155,14 +155,19 @@ def upload():
 # https://stackoverflow.com/questions/39272072/flask-send-stream-as-response
 @app.route("/stream/<youtube_id>")
 def stream(youtube_id):
+    """Music streaming
+    youtube_id: 11 character video id or the URL of the video
     """
-    url parameter `youtube`: 11 character video id or the URL of the video
-    """
+    media_type = flask.request.args.get("type", None)
     video = pafy.new(youtube_id)
-    for typ in ["3gp", "m4a", "mp4", "webm"]:
-        best_audio = video.getbest(preftype=typ)
-        if best_audio is not None:
-            break
+
+    if media_type is not None:
+        best_audio = video.getbest(preftype=media_type)
+    else:
+        for typ in ["3gp", "m4a", "mp4", "webm"]:
+            best_audio = video.getbest(preftype=typ)
+            if best_audio is not None:
+                break
 
     if best_audio is None:
         flask.abort(404)
