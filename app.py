@@ -149,13 +149,12 @@ def upload():
 
 
 # https://stackoverflow.com/questions/39272072/flask-send-stream-as-response
-@app.route("/stream")
-def stream():
+@app.route("/stream/<youtube_id>")
+def stream(youtube_id):
     """
     url parameter `youtube`: 11 character video id or the URL of the video
     """
-    youtube_url = flask.request.args["youtube"]
-    video = pafy.new(youtube_url)
+    video = pafy.new(youtube_id)
     best_audio = video.getbestaudio()
 
     # streaming GET

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 secret_key=$(cat secret_key)
 ms_api_key=$(cat ms_api)
 

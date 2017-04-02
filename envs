@@ -1,0 +1,10 @@
+# source ME!
+
+base_dir=$HOME/hymnia
+
+secret_key=$(cat "$base_dir"/secret_key)
+ms_api_key=$(cat "$base_dir"/ms_api)
+
+export SECRET_KEY=$secret_key
+export MS_API_KEY=$ms_api_key
+export production=yes
