@@ -155,7 +155,13 @@ def stream(youtube_id):
     url parameter `youtube`: 11 character video id or the URL of the video
     """
     video = pafy.new(youtube_id)
-    best_audio = video.getbestaudio()
+    for typ in ["3gp", "m4a", "mp4", "webm"]:
+        best_audio = video.getbest(preftype=typ)
+        if best_audio is not None:
+            break
+
+    if best_audio is None:
+        flask.abort(404)
 
     # streaming GET
     r = requests.get(best_audio.url, stream=True)
