@@ -102,9 +102,10 @@ def report_music():
     music = flask.request.json["music"]
     update = mongo.db.images.update_one({"_id": ObjectId(image_id)},
                                         {"$set": {"music": music}})
-    if not update["updatedExisting"]:
+    # print(update.raw_result)
+    if not update.raw_result["updatedExisting"]:
         flask.abort(404)
-    return {"result": "success"}
+    return flask.jsonify(result="success")
 
 
 @app.route("/upload", methods=["POST"])
