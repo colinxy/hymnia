@@ -10,6 +10,10 @@ from bson.objectid import ObjectId
 from flask_pymongo import PyMongo
 # from bson import json_util
 
+# youtube streaming
+import pafy
+import requests
+
 from emotion import ms_emotion_api
 
 app = Flask(__name__)
@@ -81,17 +85,25 @@ def all_images():
 
 
 @app.route("/image/<img>")
-def get_image(img):
-    image = mongo.db.images.find_one_or_404({"_id": ObjectId(img)})
+def get_image(img_id):
+    image = mongo.db.images.find_one_or_404({"_id": ObjectId(img_id)})
     print(image["filename"])
     # only handle JPEG for now
     return flask.send_file(io.BytesIO(image["content"]), mimetype="image/jpeg")
 
 
-@app.route("/report")
+@app.route("/report", methods=["POST"])
 def report_music():
-    email = flask.request.args["email"]
-    username = flask.request.args["username"]
+    # email = flask.request.args["email"]
+    # username = flask.request.args["username"]
+
+    image_id = flask.request.json["image_id"]
+    music = flask.request.json["music_id"]
+    update = mongo.db.images.update_one({"_id": ObjectId(image_id)},
+                                        {"$set": {"music_id": music}})
+    if not update["updatedExisting"]:
+        flask.abort(404)
+    return {"result": "success"}
 
 
 @app.route("/upload", methods=["POST"])
@@ -136,6 +148,19 @@ def upload():
     # client resend image_id when reporting music
     emotion["image_id"] = str(saved.inserted_id)
     return flask.jsonify(emotion)
+
+
+# https://stackoverflow.com/questions/39272072/flask-send-stream-as-response
+@app.route("/stream")
+def stream():
+    youtube_url = flask.request.args["youtube"]
+    video = pafy.new(youtube_url)
+    best_audio = video.getbestaudio()
+
+    # streaming GET
+    r = requests.get(best_audio.url, stream=True)
+    return flask.Response(r.iter_content(chunk_size=10*1024),
+                          content_type=r.headers["Content-Type"])
 
 
 if __name__ == '__main__':
