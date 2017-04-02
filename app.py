@@ -172,7 +172,4 @@ def stream(youtube_id):
 if __name__ == '__main__':
     IP = "localhost"
     PORT = 8080
-    if os.getenv("PRODUCTION"):
-        IP = "0.0.0.0"
-        PORT = 80
     app.run(IP, PORT)

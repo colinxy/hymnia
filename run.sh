@@ -2,7 +2,11 @@
 
 set -e
 
-secret_key=$(cat secret_key)
-ms_api_key=$(cat ms_api)
+workers=4
+if [ ! -z "$1" ]; then
+    workers="$1"
+fi
 
-env MS_API_KEY="$ms_api_key" SECRET_KEY="$secret_key" PRODUCTION=yes python3 app.py
+source envs
+
+gunicorn --bind 0.0.0.0:80 wsgi:app -w "$workers"

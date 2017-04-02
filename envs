@@ -1,6 +1,6 @@
 # source ME!
 
-base_dir=$HOME/hymnia
+base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 secret_key=$(cat "$base_dir"/secret_key)
 ms_api_key=$(cat "$base_dir"/ms_api)
