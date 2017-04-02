@@ -10,4 +10,7 @@ fi
 # script has to run in current directory
 . envs
 
-gunicorn --bind 0.0.0.0:80 wsgi:app -w "$workers"
+TIMEOUT=360                     # 6 mins
+
+gunicorn --bind 0.0.0.0:80 wsgi:app \
+         --workers "$workers" --timeout "$TIMEOUT"
