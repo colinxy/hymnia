@@ -51,8 +51,8 @@ def all_users():
     user_cursor = mongo.db.users.find({}, {"_id": False})
     users = []
     for user in user_cursor:
-        pprint(user)
-        if "image_ids" in user and "music_ids" in user:
+        # pprint(user)
+        if "image_ids" in user:
             users.append({
                 "username": user["username"],
                 "images": [str(im_id) for im_id in user["image_ids"]]
@@ -72,11 +72,14 @@ def all_images():
         .sort("date", pymongo.DESCENDING)
     images = []
     for image in image_cursor:
-        pprint(image)
-        if True:
+        # pprint(image)
+        if "music" in image:
             images.append({
                 "image_id": str(image["_id"]),
+                "music": image["music"],
                 "filename": image["filename"],
+                "emotion": image["emotion"],
+                "date": image["date"],
                 "username": image["user_username"]
             })
     return flask.jsonify(images)
@@ -96,9 +99,9 @@ def report_music():
     # username = flask.request.args["username"]
 
     image_id = flask.request.json["image_id"]
-    music = flask.request.json["music_id"]
+    music = flask.request.json["music"]
     update = mongo.db.images.update_one({"_id": ObjectId(image_id)},
-                                        {"$set": {"music_id": music}})
+                                        {"$set": {"music": music}})
     if not update["updatedExisting"]:
         flask.abort(404)
     return {"result": "success"}
